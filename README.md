@@ -1,32 +1,55 @@
-# AgentLog
+<p align="center">
+  <br />
+  <strong>AgentLog</strong>
+  <br />
+  <em>Open standard for AI agent session interchange</em>
+  <br />
+  <br />
+  <a href="https://www.npmjs.com/package/@braintied/agentlog"><img src="https://img.shields.io/npm/v/@braintied/agentlog?color=blue&label=npm" alt="npm"></a>
+  <a href="https://github.com/braintied/agentlog/actions"><img src="https://github.com/braintied/agentlog/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License"></a>
+  <a href="spec/agentlog-spec.md"><img src="https://img.shields.io/badge/spec-v0.1.0-green" alt="Spec"></a>
+  <a href="schemas/agentlog.schema.json"><img src="https://img.shields.io/badge/JSON_Schema-Draft_2020--12-orange" alt="JSON Schema"></a>
+</p>
 
-**Open standard for AI agent session interchange.**
+---
 
-AgentLog defines a portable JSON format for recording what happens during AI agent sessions — human-to-agent coding, agent-to-agent orchestration, and team-managed agent workflows. It captures conversation, tool calls, file operations, terminal commands, reasoning traces, costs, and relationships to commits, PRs, and issues.
+AgentLog defines a portable JSON format for recording what happens during AI agent sessions. One format for every tool, every workflow, every platform.
 
-[![npm](https://img.shields.io/npm/v/@braintied/agentlog)](https://www.npmjs.com/package/@braintied/agentlog)
-[![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
-[![GitHub](https://img.shields.io/github/stars/braintied/agentlog)](https://github.com/braintied/agentlog)
+```json
+{
+  "specVersion": "0.1.0",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "completed",
+  "agent": { "name": "Claude Code", "model": "claude-sonnet-4-6" },
+  "events": [
+    { "type": "message", "role": "user", "content": "Fix the auth bug" },
+    { "type": "fileOperation", "operation": "edit", "path": "src/auth.ts", "linesAdded": 4 },
+    { "type": "terminalCommand", "command": "npm test", "exitCode": 0 }
+  ]
+}
+```
 
-## Why
+## The Problem
 
-Every AI coding tool produces session logs in its own proprietary format. There's no way to:
+Every AI coding tool (Claude Code, Cursor, Codex, Aider) produces session logs in its own proprietary format. There's no way to:
 
-- Search across sessions from different tools (Claude Code, Cursor, Codex, Aider)
-- Track what agent teams are doing across your projects
-- Measure AI coding impact across your engineering org
-- Feed session data into observability platforms (Langfuse, Grafana)
-- Build intelligence layers that understand *how* code was written
+- **Search** across sessions from different tools
+- **Measure** AI coding impact across your engineering org
+- **Feed** session data into observability platforms
+- **Understand** how code was written, not just what was written
 
-AgentLog fills this gap. One format, every tool, every workflow.
+## The Solution
 
-## Who It's For
+AgentLog is a single, vendor-neutral format that captures the complete record: conversation, tool calls, file operations with diffs, terminal commands, reasoning traces, costs, and relationships to commits, PRs, and issues.
 
-| Workflow | What AgentLog Records |
-|----------|----------------------|
-| **Developer + AI agent** | Claude Code sessions, Cursor chats, Codex runs — what you built, what files changed, what decisions were made |
-| **Agent + Agent** | Multi-agent orchestration — which agent delegated to which, what each sub-agent did, how results flowed back |
-| **Teams managing agents** | Fleet-wide visibility — which agents ran, on which projects, at what cost, with what outcomes |
+## Specification
+
+| Document | Version | Status |
+|----------|---------|--------|
+| [Core Specification](spec/agentlog-spec.md) | 0.1.0 | Draft |
+| [JSON Schema](schemas/agentlog.schema.json) | Draft 2020-12 | Draft |
+| [TypeScript Types](src/schema.ts) | 0.1.0 | Draft |
 
 ## Install
 
@@ -34,17 +57,16 @@ AgentLog fills this gap. One format, every tool, every workflow.
 npm install @braintied/agentlog
 ```
 
-## Quick Start
+## Usage
+
+### Validate a session document
 
 ```typescript
-import type { AgentLog } from '@braintied/agentlog';
 import { validateAgentLog, SPEC_VERSION } from '@braintied/agentlog';
 
-// Validate a session document
-const result = validateAgentLog(jsonData);
+const result = validateAgentLog(sessionData);
 if (result.success) {
-  const session: AgentLog = result.data;
-  console.log(`${session.events.length} events across ${session.metrics?.durationMinutes} minutes`);
+  console.log(`Valid AgentLog v${SPEC_VERSION}`);
 }
 ```
 
@@ -54,6 +76,7 @@ if (result.success) {
 import { convertClaudeCodeSession } from '@braintied/agentlog/convert/claude-code';
 
 const session = await convertClaudeCodeSession('~/.claude/projects/myproject/session-uuid');
+console.log(session.events.length, 'events captured');
 ```
 
 ### Export from Watchtower
@@ -64,112 +87,48 @@ import { exportWatchtowerSession } from '@braintied/agentlog/convert/watchtower'
 const agentLog = exportWatchtowerSession(dbRow, { projectName: 'my-app' });
 ```
 
-## Schema Overview
+## Schema
 
 An AgentLog document has three layers:
 
-### Layer 1 — Session Envelope (required)
+### Layer 1 — Session Envelope
 
-Every document starts with the basics: who, when, where.
+The required context: who, when, where, what tool.
 
-```json
-{
-  "specVersion": "0.1.0",
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "startTime": "2026-03-30T10:00:00Z",
-  "endTime": "2026-03-30T10:45:00Z",
-  "status": "completed",
-  "agent": {
-    "name": "Claude Code",
-    "model": "claude-sonnet-4-6",
-    "provider": "anthropic"
-  },
-  "project": {
-    "name": "my-app",
-    "repository": "acme/my-app",
-    "branch": "main"
-  },
-  "developer": {
-    "id": "dev-1",
-    "name": "Jane Developer"
-  }
-}
-```
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `specVersion` | string | Yes | Always `"0.1.0"` |
+| `id` | string | Yes | Session UUID |
+| `startTime` | string | Yes | ISO 8601 start time |
+| `endTime` | string/null | No | ISO 8601 end time |
+| `status` | enum | Yes | `active`, `completed`, `failed`, `cancelled` |
+| `agent` | object | Yes | Agent name, model, provider |
+| `project` | object | No | Repo, branch, working directory |
+| `developer` | object | No | Who ran the session |
 
 ### Layer 2 — Event Timeline
 
-Seven event types capture everything that happened, in order:
+Seven event types capture everything that happened:
 
-| Event | What it records | Example |
-|-------|----------------|---------|
-| `message` | User prompts and AI responses | `"Fix the auth middleware"` |
-| `toolCall` | Tool invocations with input/output | `Agent("debug auth", prompt="...")` |
-| `fileOperation` | File read/create/edit/delete with diffs | `Edit src/middleware.ts: +4 -1` |
-| `terminalCommand` | Shell commands with stdout/stderr/exit code | `npm run typecheck -> exit 0` |
-| `search` | Code search, web search, semantic search | `Grep "token.*expired"` |
-| `reasoning` | AI reasoning traces — intent, alternatives, rationale | `"Chose JWT refresh over re-auth because..."` |
-| `error` | Errors encountered and how they were resolved | `TypeError: token is undefined -> fixed` |
+| Type | What it captures | Key fields |
+|------|-----------------|------------|
+| **`message`** | Conversation turns | `role`, `content`, `tokenUsage` |
+| **`toolCall`** | Tool invocations | `name`, `input`, `output`, `status` |
+| **`fileOperation`** | File changes | `operation`, `path`, `diff`, `linesAdded` |
+| **`terminalCommand`** | Shell commands | `command`, `stdout`, `exitCode` |
+| **`search`** | Code/web search | `tool`, `query`, `resultCount` |
+| **`reasoning`** | AI decision-making | `intent`, `alternatives`, `rationale` |
+| **`error`** | Errors + recovery | `message`, `code`, `recovery`, `resolved` |
 
-Events support **nesting via `parentId`** — tool calls within an agent turn, sub-agent sessions within a parent session.
+All events share: `id`, `timestamp`, `parentId` (for nesting), `durationMs`, `properties` (extensibility).
 
 ### Layer 3 — Relationships
 
-Links sessions to the engineering graph:
-
-- **Commits** — code created during the session
-- **Pull requests** — PRs opened or updated
-- **Issues** — issues referenced or resolved
-- **Errors** — errors tracked in Sentry, Datadog, etc.
-- **Deployments** — deploys triggered
-- **Parent/child sessions** — session continuity and agent delegation chains
-
-## Multi-Agent Support
-
-AgentLog handles agent-to-agent workflows natively:
-
-```json
-{
-  "type": "toolCall",
-  "name": "Agent",
-  "input": {
-    "description": "Fix failing tests",
-    "subagent_type": "sisyphus-junior",
-    "prompt": "Run the test suite and fix any failures..."
-  },
-  "status": "success",
-  "summary": "Sub-agent fixed 3 failing tests in auth module"
-}
-```
-
-The `parentSession` and `childSessions` fields in relationships link orchestrator sessions to their delegated sub-sessions, creating a full execution tree.
-
-## Metrics & Cost Tracking
-
-Every session can include aggregate metrics:
-
-```json
-{
-  "metrics": {
-    "messageCount": 12,
-    "toolCallCount": 24,
-    "filesTouchedCount": 5,
-    "durationMinutes": 45,
-    "tokenUsage": {
-      "inputTokens": 125000,
-      "outputTokens": 8500,
-      "cacheReadTokens": 98000,
-      "cacheWriteTokens": null
-    },
-    "estimatedCostUsd": 0.42,
-    "filesTouched": ["src/auth.ts", "src/middleware.ts"],
-    "toolsUsed": ["Edit", "Bash", "Grep", "Agent"]
-  }
-}
-```
+Links to the engineering graph: `commits`, `pullRequests`, `issues`, `errors`, `deployments`, `parentSession`, `childSessions`.
 
 ## Extensibility
 
-Every object in the schema has a `properties` bag for vendor-specific data:
+Every object has a `properties` bag for vendor-specific data ([SARIF pattern](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html)):
 
 ```json
 {
@@ -183,54 +142,67 @@ Every object in the schema has a `properties` bag for vendor-specific data:
 }
 ```
 
-This follows the SARIF property bag pattern — no namespace pollution, vendors can add custom data without schema changes.
+## Who It's For
+
+| Workflow | What AgentLog Records |
+|----------|----------------------|
+| **Developer + AI** | Claude Code sessions, Cursor chats — what you built and why |
+| **Agent + Agent** | Multi-agent orchestration — delegation chains, sub-agent results |
+| **Teams** | Fleet visibility — which agents ran, on what, at what cost |
+
+## SDKs & Converters
+
+| Language | Package | Status |
+|----------|---------|--------|
+| TypeScript/Node | [`@braintied/agentlog`](https://www.npmjs.com/package/@braintied/agentlog) | Available |
+| Python | — | Planned |
+| Go | — | Planned |
+
+| Converter | Status |
+|-----------|--------|
+| Claude Code JSONL | Available |
+| Watchtower DB | Available |
+| Aider | Planned |
+| OpenAI Codex | Planned |
+| Cursor | Planned |
+
+## Examples
+
+| Example | Events | Demonstrates |
+|---------|--------|-------------|
+| [minimal-session.json](examples/minimal-session.json) | 6 | Basic edit + test flow |
+| [debugging-session.json](examples/debugging-session.json) | 8 | Error investigation with Sentry link |
+| [multi-agent-session.json](examples/multi-agent-session.json) | 5 | Parallel sub-agent orchestration |
 
 ## Complements Agent Trace
 
-[Agent Trace](https://agent-trace.dev/) tracks *attribution* — which lines of code AI wrote. AgentLog tracks *activity* — what happened during the session. They're complementary:
+[Agent Trace](https://agent-trace.dev/) tracks *attribution* — which lines AI wrote.
+AgentLog tracks *activity* — what happened during the session.
 
-- An AgentLog document can reference Agent Trace data in its relationships
-- Agent Trace `conversation.url` fields can point to AgentLog documents
-- Together they answer both "what did AI write?" and "how did it get there?"
+Together: "what did AI write?" + "how did it get there?"
 
-## Design Principles
+## Design Influences
 
-| Principle | Inspiration | Implementation |
-|-----------|------------|----------------|
-| Minimal required fields | CloudEvents | 5 required fields in the envelope — everything else optional |
-| Property bags everywhere | SARIF | Every object accepts vendor-specific `properties` |
-| Spec version on every document | CloudEvents | `specVersion` field enables forward compatibility |
-| Discriminated event union | OTel GenAI | `type` field on each event for clean parsing |
-| Modular profiles | SPDX 3.0 | Core, Engineering Graph, and Observability profiles (planned) |
+| Pattern | Source |
+|---------|--------|
+| Minimal required fields | [CloudEvents](https://cloudevents.io/) |
+| Property bags | [SARIF](https://sarifweb.azurewebsites.net/) |
+| JSON Schema as normative | [CycloneDX](https://cyclonedx.org/) |
+| Discriminated event union | [OTel GenAI](https://opentelemetry.io/) |
+| Profile modularity | [SPDX 3.0](https://spdx.dev/) |
 
-## Converters
+## Community
 
-| Tool | Status | Import |
-|------|--------|--------|
-| Claude Code | Available | `@braintied/agentlog/convert/claude-code` |
-| Watchtower | Available | `@braintied/agentlog/convert/watchtower` |
-| Aider | Planned | — |
-| OpenAI Codex | Planned | — |
-| Cursor | Planned | — |
-
-Want to add a converter? See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Roadmap
-
-- [ ] JSON Schema files (`.schema.json`) exported alongside TypeScript types
-- [ ] GitHub Actions CI for schema validation and type checking
-- [ ] Aider and Codex converters
-- [ ] Prose specification document (`spec/agentlog-spec.md`)
-- [ ] More example sessions (debugging, multi-agent, refactoring)
-- [ ] Documentation site
-- [ ] OTel export bridge (AgentLog events -> OTel spans with `gen_ai.*` attributes)
+- [GitHub Issues](https://github.com/braintied/agentlog/issues) — bugs, feature requests, spec proposals
+- [Contributing Guide](CONTRIBUTING.md) — how to add converters, propose spec changes
+- [Security Policy](SECURITY.md) — reporting vulnerabilities
 
 ## License
 
-Apache-2.0 — spec and code. The explicit patent grant (Section 3) protects implementers of the format.
+[Apache-2.0](LICENSE) — spec and code. The explicit patent grant (Section 3) protects implementers.
 
-## Status
+---
 
-**v0.1.0** — initial release. Schema, validation, converters for Claude Code and Watchtower. Seeking early adopters and feedback.
-
-Built by [Braintied](https://braintied.com). Created as part of the [Watchtower](https://github.com/braintied) project intelligence platform.
+<p align="center">
+  <sub>Built by <a href="https://braintied.com">Braintied</a> · Reference implementation: <a href="https://github.com/braintied/watchtower">Watchtower</a></sub>
+</p>
