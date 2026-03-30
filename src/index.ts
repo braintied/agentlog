@@ -1,5 +1,5 @@
 /**
- * @agentlog/schema
+ * @braintied/agentlog
  *
  * AgentLog — Open standard for AI agent session interchange.
  * https://github.com/braintied/agentlog

@@ -1,12 +1,11 @@
 {
-  "name": "@agentlog/schema",
+  "name": "@braintied/agentlog",
   "version": "0.1.0",
   "description": "AgentLog — Open standard for AI agent session interchange. Schema, types, validation, and converters.",
   "homepage": "https://github.com/braintied/agentlog",
   "repository": {
     "type": "git",
-    "url": "https://github.com/braintied/agentlog.git",
-    "directory": "packages/schema"
+    "url": "https://github.com/braintied/agentlog.git"
   },
   "type": "module",
   "license": "Apache-2.0",
@@ -24,7 +23,10 @@
       "import": "./dist/convert/watchtower.js"
     }
   },
-  "files": ["dist", "schemas"],
+  "files": [
+    "dist",
+    "schemas"
+  ],
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit"
@@ -33,6 +35,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/node": "^25.5.0",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0"
   }

@@ -18,14 +18,14 @@ AgentLog fills this gap. One format, every tool, portable everywhere.
 ## Install
 
 ```bash
-npm install @agentlog/schema
+npm install @braintied/agentlog
 ```
 
 ## Usage
 
 ```typescript
-import type { AgentLog } from '@agentlog/schema';
-import { validateAgentLog, SPEC_VERSION } from '@agentlog/schema';
+import type { AgentLog } from '@braintied/agentlog';
+import { validateAgentLog, SPEC_VERSION } from '@braintied/agentlog';
 
 // Validate a session document
 const result = validateAgentLog(jsonData);
@@ -38,7 +38,7 @@ if (result.success) {
 ### Convert from Claude Code
 
 ```typescript
-import { convertClaudeCodeSession } from '@agentlog/schema/convert/claude-code';
+import { convertClaudeCodeSession } from '@braintied/agentlog/convert/claude-code';
 
 const session = await convertClaudeCodeSession('~/.claude/projects/myproject/session-uuid');
 ```
@@ -46,7 +46,7 @@ const session = await convertClaudeCodeSession('~/.claude/projects/myproject/ses
 ### Export from Watchtower
 
 ```typescript
-import { exportWatchtowerSession } from '@agentlog/schema/convert/watchtower';
+import { exportWatchtowerSession } from '@braintied/agentlog/convert/watchtower';
 
 const agentLog = exportWatchtowerSession(dbRow, { projectName: 'my-app' });
 ```
