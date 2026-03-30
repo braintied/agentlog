@@ -8,7 +8,7 @@
   <a href="https://www.npmjs.com/package/@braintied/agentlog"><img src="https://img.shields.io/npm/v/@braintied/agentlog?color=blue&label=npm" alt="npm"></a>
   <a href="https://github.com/braintied/agentlog/actions"><img src="https://github.com/braintied/agentlog/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License"></a>
-  <a href="spec/agentlog-spec.md"><img src="https://img.shields.io/badge/spec-v0.1.0-green" alt="Spec"></a>
+  <a href="spec/agentlog-spec.md"><img src="https://img.shields.io/badge/spec-v0.2.0-green" alt="Spec"></a>
   <a href="schemas/agentlog.schema.json"><img src="https://img.shields.io/badge/JSON_Schema-Draft_2020--12-orange" alt="JSON Schema"></a>
 </p>
 
@@ -18,7 +18,7 @@ AgentLog defines a portable JSON format for recording what happens during AI age
 
 ```json
 {
-  "specVersion": "0.1.0",
+  "specVersion": "0.2.0",
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "status": "completed",
   "agent": { "name": "Claude Code", "model": "claude-sonnet-4-6" },
@@ -47,9 +47,9 @@ AgentLog is a single, vendor-neutral format that captures the complete record: c
 
 | Document | Version | Status |
 |----------|---------|--------|
-| [Core Specification](spec/agentlog-spec.md) | 0.1.0 | Draft |
+| [Core Specification](spec/agentlog-spec.md) | 0.2.0 | Draft |
 | [JSON Schema](schemas/agentlog.schema.json) | Draft 2020-12 | Draft |
-| [TypeScript Types](src/schema.ts) | 0.1.0 | Draft |
+| [TypeScript Types](src/schema.ts) | 0.2.0 | Draft |
 
 ## Install
 
@@ -97,7 +97,7 @@ The required context: who, when, where, what tool.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `specVersion` | string | Yes | Always `"0.1.0"` |
+| `specVersion` | string | Yes | Always `"0.2.0"` |
 | `id` | string | Yes | Session UUID |
 | `startTime` | string | Yes | ISO 8601 start time |
 | `endTime` | string/null | No | ISO 8601 end time |

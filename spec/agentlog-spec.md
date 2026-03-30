@@ -1,6 +1,6 @@
 # AgentLog Specification
 
-**Version**: 0.1.0
+**Version**: 0.2.0
 **Status**: Draft
 **Date**: 2026-03-30
 **License**: Apache-2.0
@@ -30,7 +30,7 @@ This specification does NOT cover:
 An AgentLog document is conformant if it:
 1. Is valid JSON
 2. Contains all required fields as specified in Section 2
-3. Uses `specVersion` value `"0.1.0"`
+3. Uses `specVersion` value `"0.2.0"`
 4. Contains only recognized event types in the `events` array (Section 3)
 
 Producers SHOULD include as many optional fields as available. Consumers MUST tolerate missing optional fields.
@@ -51,7 +51,7 @@ The root object of an AgentLog document.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `specVersion` | string | MUST be `"0.1.0"` |
+| `specVersion` | string | MUST be `"0.2.0"` |
 | `id` | string | Unique session identifier. UUID v4 RECOMMENDED. |
 | `startTime` | string | ISO 8601 datetime when the session started |
 | `status` | string | One of: `active`, `completed`, `failed`, `cancelled` |
@@ -194,6 +194,67 @@ An error encountered during the session.
 | `code` | string or null | No | Error code or type |
 | `recovery` | string or null | No | One of: `retry`, `skip`, `abort`, `escalate`, `fixed` |
 | `resolved` | boolean | Yes | Whether the error was resolved |
+| `category` | string or null | No | One of: `runtime`, `type`, `syntax`, `network`, `permission`, `timeout`, `validation`, `resource`, `unknown` |
+
+### 3.9 `handoff` (v0.2.0)
+
+Agent-to-agent delegation.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `fromAgent` | string | Yes | Agent initiating the handoff |
+| `toAgent` | string | Yes | Agent receiving the handoff |
+| `reason` | string or null | No | Why the handoff is happening |
+| `contextTransferred` | string or null | No | Context transferred to target |
+| `result` | string or null | No | Result received from target |
+| `status` | string | Yes | One of: `initiated`, `accepted`, `completed`, `rejected`, `failed` |
+
+### 3.10 `approval` (v0.2.0)
+
+Human-in-the-loop permission decision.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `action` | string | Yes | What action required approval |
+| `approver` | string | Yes | One of: `user`, `policy`, `system` |
+| `decision` | string | Yes | One of: `approved`, `denied`, `modified` |
+| `constraints` | string or null | No | Constraints applied |
+| `toolName` | string or null | No | Tool that was approved/denied |
+
+### 3.11 `plan` (v0.2.0)
+
+Structured plan or task decomposition.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `title` | string | Yes | Plan title |
+| `steps` | array | No | Plan steps (see below) |
+| `status` | string | Yes | One of: `draft`, `active`, `completed`, `abandoned` |
+
+Plan steps: `{ id, description, status, dependsOn[], confidence }`
+
+### 3.12 `checkpoint` (v0.2.0)
+
+State snapshot for rollback/recovery.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `checkpointType` | string | Yes | One of: `git_commit`, `snapshot`, `memory_flush`, `auto_save`, `custom` |
+| `label` | string or null | No | Human-readable label |
+| `reference` | string or null | No | Reference to checkpoint data |
+| `restorable` | boolean | Yes | Whether this checkpoint can be restored |
+
+### 3.13 `contextLoad` (v0.2.0)
+
+Agent loading context from external sources.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `source` | string | Yes | One of: `file`, `memory`, `rag`, `web`, `database`, `api`, `codebase`, `custom` |
+| `query` | string or null | No | What was loaded |
+| `itemCount` | integer or null | No | Items/chunks loaded |
+| `tokenCount` | integer or null | No | Tokens of context loaded |
+| `reason` | string or null | No | Why context was loaded |
 
 ## 4. Metrics
 
