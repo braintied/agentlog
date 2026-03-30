@@ -16,6 +16,15 @@ import type {
 } from '../schema.js';
 import { SPEC_VERSION } from '../schema.js';
 
+const BASE_DEFAULTS = {
+  tokenUsage: null,
+  estimatedCostUsd: null,
+  model: null,
+  traceId: null,
+  spanId: null,
+  groupId: null,
+} as const;
+
 // =============================================================================
 // WATCHTOWER ROW TYPES
 // =============================================================================
@@ -133,8 +142,12 @@ export function exportWatchtowerSession(
       issues: [],
       errors: [],
       deployments: [],
+      reviews: [],
+      testRuns: [],
+      branches: [],
       parentSession: null,
       childSessions: [],
+      groupId: null,
       properties: {},
     };
   }
@@ -181,9 +194,14 @@ export function exportWatchtowerSession(
       estimatedCostUsd: null,
       filesTouched,
       toolsUsed,
+      modelsUsed: [],
       properties: {},
     },
     relationships,
+    classification: null,
+    redactions: null,
+    profile: null,
+    team: null,
     properties: {
       watchtowerSessionKey: row.session_key,
       watchtowerCategory: row.category,
@@ -214,9 +232,9 @@ function buildMessageEvent(
     timestamp: sessionStartTime !== null ? sessionStartTime : new Date().toISOString(),
     parentId: null,
     durationMs: null,
+    ...BASE_DEFAULTS,
     role,
     content,
-    tokenUsage: null,
     properties: {},
   };
 }

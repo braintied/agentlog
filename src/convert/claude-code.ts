@@ -21,6 +21,16 @@ import type {
 } from '../schema.js';
 import { SPEC_VERSION } from '../schema.js';
 
+/** Default values for new EventBase fields (v0.2.0). */
+const BASE_DEFAULTS = {
+  tokenUsage: null,
+  estimatedCostUsd: null,
+  model: null,
+  traceId: null,
+  spanId: null,
+  groupId: null,
+} as const;
+
 // =============================================================================
 // JSONL TYPES (Claude Code internal format)
 // =============================================================================
@@ -145,9 +155,9 @@ export async function convertClaudeCodeSession(
         timestamp: entry.timestamp,
         parentId: null,
         durationMs: null,
+        ...BASE_DEFAULTS,
         role: 'user',
         content,
-        tokenUsage: null,
         properties: {},
       };
       events.push(msgEvent);
@@ -179,17 +189,18 @@ export async function convertClaudeCodeSession(
           timestamp: entry.timestamp,
           parentId: null,
           durationMs: null,
-          role: 'assistant',
-          content: textParts.join('\n'),
+          ...BASE_DEFAULTS,
           tokenUsage: {
             inputTokens,
             outputTokens,
             cacheReadTokens: usage?.cache_read_input_tokens !== undefined ? usage.cache_read_input_tokens : null,
             cacheWriteTokens: usage?.cache_creation_input_tokens !== undefined ? usage.cache_creation_input_tokens : null,
+            reasoningTokens: null,
           },
-          properties: {
-            model: entry.message.model !== undefined ? entry.message.model : null,
-          },
+          model: entry.message.model !== undefined ? entry.message.model : null,
+          role: 'assistant',
+          content: textParts.join('\n'),
+          properties: {},
         };
         events.push(msgEvent);
       }
@@ -266,13 +277,19 @@ export async function convertClaudeCodeSession(
         outputTokens: totalOutputTokens,
         cacheReadTokens: null,
         cacheWriteTokens: null,
+        reasoningTokens: null,
       },
       estimatedCostUsd: null,
       filesTouched: Array.from(filesTouched),
       toolsUsed: Array.from(toolsUsed),
+      modelsUsed: model !== null ? [model] : [],
       properties: {},
     },
     relationships: null,
+    classification: null,
+    redactions: null,
+    profile: null,
+    team: null,
     properties: {
       converter: 'claude-code',
       converterVersion: SPEC_VERSION,
@@ -375,13 +392,16 @@ function convertToolCall(
       timestamp,
       parentId,
       durationMs: null,
+      ...BASE_DEFAULTS,
       operation,
       path: filePath !== null ? filePath : 'unknown',
       diff,
+      diffFormat: diff !== null ? 'unified' : null,
       beforeHash: null,
       afterHash: null,
       linesAdded: null,
       linesRemoved: null,
+      truncated: null,
       properties: {},
     };
     return fileEvent;
@@ -396,11 +416,14 @@ function convertToolCall(
       timestamp,
       parentId,
       durationMs: null,
+      ...BASE_DEFAULTS,
       command,
       cwd: typeof input.cwd === 'string' ? input.cwd : null,
       stdout: null,
       stderr: null,
       exitCode: null,
+      shell: null,
+      truncated: null,
       properties: {},
     };
     return termEvent;
@@ -420,6 +443,7 @@ function convertToolCall(
       timestamp,
       parentId,
       durationMs: null,
+      ...BASE_DEFAULTS,
       tool: name,
       query,
       resultCount: null,
@@ -445,6 +469,7 @@ function convertToolCall(
     timestamp,
     parentId,
     durationMs: null,
+    ...BASE_DEFAULTS,
     name,
     input: truncatedInput,
     output: null,

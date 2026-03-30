@@ -1,6 +1,6 @@
 {
   "name": "@braintied/agentlog",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "AgentLog — Open standard for AI agent session interchange. Schema, types, validation, and converters.",
   "homepage": "https://github.com/braintied/agentlog",
   "repository": {
