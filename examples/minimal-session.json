@@ -12,16 +12,16 @@
     "properties": {}
   },
   "project": {
-    "name": "ora-ai",
-    "repository": "ga1ien/ora",
-    "workingDirectory": "/Users/dev/projects/ora-ai",
+    "name": "my-app",
+    "repository": "acme/my-app",
+    "workingDirectory": "/Users/dev/projects/my-app",
     "branch": "main",
     "commitSha": "abc1234",
     "properties": {}
   },
   "developer": {
-    "id": "galen",
-    "name": "Galen Oakes",
+    "id": "dev-1",
+    "name": "Jane Developer",
     "properties": {}
   },
   "events": [
@@ -103,7 +103,7 @@
       "parentId": "evt-3",
       "durationMs": 3200,
       "command": "npm run typecheck",
-      "cwd": "/Users/dev/projects/ora-ai",
+      "cwd": "/Users/dev/projects/my-app",
       "stdout": "No errors found.",
       "stderr": null,
       "exitCode": 0,
@@ -131,7 +131,7 @@
       {
         "sha": "d4e5f6a",
         "message": "fix: handle expired tokens in auth middleware",
-        "repository": "ga1ien/ora",
+        "repository": "acme/my-app",
         "timestamp": "2026-03-30T10:02:00Z"
       }
     ],
