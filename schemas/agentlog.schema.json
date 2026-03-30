@@ -1,0 +1,291 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/braintied/agentlog/schemas/agentlog.schema.json",
+  "title": "AgentLog",
+  "description": "Open standard for AI agent session interchange. Captures the full record of an AI-assisted development session.",
+  "type": "object",
+  "required": ["specVersion", "id", "startTime", "status", "agent", "events"],
+  "properties": {
+    "specVersion": {
+      "type": "string",
+      "const": "0.1.0",
+      "description": "AgentLog spec version"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique session identifier (UUID v4 recommended)"
+    },
+    "startTime": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the session started (ISO 8601)"
+    },
+    "endTime": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When the session ended (ISO 8601). Null if still active."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "completed", "failed", "cancelled"]
+    },
+    "agent": { "$ref": "#/$defs/AgentInfo" },
+    "project": {
+      "oneOf": [{ "$ref": "#/$defs/ProjectContext" }, { "type": "null" }]
+    },
+    "developer": {
+      "oneOf": [{ "$ref": "#/$defs/DeveloperInfo" }, { "type": "null" }]
+    },
+    "events": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/SessionEvent" },
+      "default": []
+    },
+    "metrics": {
+      "oneOf": [{ "$ref": "#/$defs/SessionMetrics" }, { "type": "null" }]
+    },
+    "relationships": {
+      "oneOf": [{ "$ref": "#/$defs/SessionRelationships" }, { "type": "null" }]
+    },
+    "properties": {
+      "type": "object",
+      "additionalProperties": true,
+      "default": {}
+    }
+  },
+  "$defs": {
+    "AgentInfo": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": ["string", "null"] },
+        "model": { "type": ["string", "null"] },
+        "provider": { "type": ["string", "null"] },
+        "properties": { "type": "object", "additionalProperties": true, "default": {} }
+      }
+    },
+    "ProjectContext": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "repository": { "type": ["string", "null"] },
+        "workingDirectory": { "type": ["string", "null"] },
+        "branch": { "type": ["string", "null"] },
+        "commitSha": { "type": ["string", "null"] },
+        "properties": { "type": "object", "additionalProperties": true, "default": {} }
+      }
+    },
+    "DeveloperInfo": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": ["string", "null"] },
+        "properties": { "type": "object", "additionalProperties": true, "default": {} }
+      }
+    },
+    "TokenUsage": {
+      "type": "object",
+      "required": ["inputTokens", "outputTokens"],
+      "properties": {
+        "inputTokens": { "type": "integer" },
+        "outputTokens": { "type": "integer" },
+        "cacheReadTokens": { "type": ["integer", "null"] },
+        "cacheWriteTokens": { "type": ["integer", "null"] }
+      }
+    },
+    "SessionEvent": {
+      "type": "object",
+      "required": ["type", "id", "timestamp"],
+      "discriminator": { "propertyName": "type" },
+      "oneOf": [
+        { "$ref": "#/$defs/MessageEvent" },
+        { "$ref": "#/$defs/ToolCallEvent" },
+        { "$ref": "#/$defs/FileOperationEvent" },
+        { "$ref": "#/$defs/TerminalCommandEvent" },
+        { "$ref": "#/$defs/SearchEvent" },
+        { "$ref": "#/$defs/ReasoningEvent" },
+        { "$ref": "#/$defs/ErrorEvent" }
+      ]
+    },
+    "EventBase": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "parentId": { "type": ["string", "null"], "default": null },
+        "durationMs": { "type": ["integer", "null"], "default": null },
+        "properties": { "type": "object", "additionalProperties": true, "default": {} }
+      }
+    },
+    "MessageEvent": {
+      "allOf": [{ "$ref": "#/$defs/EventBase" }],
+      "type": "object",
+      "required": ["type", "id", "timestamp", "role", "content"],
+      "properties": {
+        "type": { "const": "message" },
+        "role": { "type": "string", "enum": ["user", "assistant", "system"] },
+        "content": { "type": "string" },
+        "tokenUsage": { "oneOf": [{ "$ref": "#/$defs/TokenUsage" }, { "type": "null" }] }
+      }
+    },
+    "ToolCallEvent": {
+      "allOf": [{ "$ref": "#/$defs/EventBase" }],
+      "type": "object",
+      "required": ["type", "id", "timestamp", "name", "input", "status"],
+      "properties": {
+        "type": { "const": "toolCall" },
+        "name": { "type": "string" },
+        "input": { "type": "object", "additionalProperties": true },
+        "output": { "type": ["string", "null"] },
+        "status": { "type": "string", "enum": ["success", "error", "cancelled"] },
+        "summary": { "type": ["string", "null"] }
+      }
+    },
+    "FileOperationEvent": {
+      "allOf": [{ "$ref": "#/$defs/EventBase" }],
+      "type": "object",
+      "required": ["type", "id", "timestamp", "operation", "path"],
+      "properties": {
+        "type": { "const": "fileOperation" },
+        "operation": { "type": "string", "enum": ["read", "create", "edit", "delete"] },
+        "path": { "type": "string" },
+        "diff": { "type": ["string", "null"] },
+        "beforeHash": { "type": ["string", "null"] },
+        "afterHash": { "type": ["string", "null"] },
+        "linesAdded": { "type": ["integer", "null"] },
+        "linesRemoved": { "type": ["integer", "null"] }
+      }
+    },
+    "TerminalCommandEvent": {
+      "allOf": [{ "$ref": "#/$defs/EventBase" }],
+      "type": "object",
+      "required": ["type", "id", "timestamp", "command"],
+      "properties": {
+        "type": { "const": "terminalCommand" },
+        "command": { "type": "string" },
+        "cwd": { "type": ["string", "null"] },
+        "stdout": { "type": ["string", "null"] },
+        "stderr": { "type": ["string", "null"] },
+        "exitCode": { "type": ["integer", "null"] }
+      }
+    },
+    "SearchEvent": {
+      "allOf": [{ "$ref": "#/$defs/EventBase" }],
+      "type": "object",
+      "required": ["type", "id", "timestamp", "tool", "query"],
+      "properties": {
+        "type": { "const": "search" },
+        "tool": { "type": "string" },
+        "query": { "type": "string" },
+        "resultCount": { "type": ["integer", "null"] },
+        "topResults": { "type": "array", "items": { "type": "string" }, "default": [] }
+      }
+    },
+    "ReasoningEvent": {
+      "allOf": [{ "$ref": "#/$defs/EventBase" }],
+      "type": "object",
+      "required": ["type", "id", "timestamp", "intent", "rationale"],
+      "properties": {
+        "type": { "const": "reasoning" },
+        "intent": { "type": "string" },
+        "alternatives": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "rationale": { "type": "string" }
+      }
+    },
+    "ErrorEvent": {
+      "allOf": [{ "$ref": "#/$defs/EventBase" }],
+      "type": "object",
+      "required": ["type", "id", "timestamp", "message", "resolved"],
+      "properties": {
+        "type": { "const": "error" },
+        "message": { "type": "string" },
+        "code": { "type": ["string", "null"] },
+        "recovery": { "type": ["string", "null"], "enum": ["retry", "skip", "abort", "escalate", "fixed", null] },
+        "resolved": { "type": "boolean" }
+      }
+    },
+    "SessionMetrics": {
+      "type": "object",
+      "required": ["messageCount", "toolCallCount", "filesTouchedCount"],
+      "properties": {
+        "messageCount": { "type": "integer" },
+        "toolCallCount": { "type": "integer" },
+        "filesTouchedCount": { "type": "integer" },
+        "durationMinutes": { "type": ["integer", "null"] },
+        "tokenUsage": { "oneOf": [{ "$ref": "#/$defs/TokenUsage" }, { "type": "null" }] },
+        "estimatedCostUsd": { "type": ["number", "null"] },
+        "filesTouched": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "toolsUsed": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "properties": { "type": "object", "additionalProperties": true, "default": {} }
+      }
+    },
+    "SessionRelationships": {
+      "type": "object",
+      "properties": {
+        "commits": { "type": "array", "items": { "$ref": "#/$defs/CommitRef" }, "default": [] },
+        "pullRequests": { "type": "array", "items": { "$ref": "#/$defs/PullRequestRef" }, "default": [] },
+        "issues": { "type": "array", "items": { "$ref": "#/$defs/IssueRef" }, "default": [] },
+        "errors": { "type": "array", "items": { "$ref": "#/$defs/ErrorRef" }, "default": [] },
+        "deployments": { "type": "array", "items": { "$ref": "#/$defs/DeploymentRef" }, "default": [] },
+        "parentSession": { "type": ["string", "null"] },
+        "childSessions": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "properties": { "type": "object", "additionalProperties": true, "default": {} }
+      }
+    },
+    "CommitRef": {
+      "type": "object",
+      "required": ["sha"],
+      "properties": {
+        "sha": { "type": "string" },
+        "message": { "type": ["string", "null"] },
+        "repository": { "type": ["string", "null"] },
+        "timestamp": { "type": ["string", "null"] }
+      }
+    },
+    "PullRequestRef": {
+      "type": "object",
+      "required": ["number"],
+      "properties": {
+        "number": { "type": "integer" },
+        "title": { "type": ["string", "null"] },
+        "url": { "type": ["string", "null"] },
+        "repository": { "type": ["string", "null"] },
+        "status": { "type": ["string", "null"] }
+      }
+    },
+    "IssueRef": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": ["string", "null"] },
+        "url": { "type": ["string", "null"] },
+        "tracker": { "type": ["string", "null"] },
+        "status": { "type": ["string", "null"] }
+      }
+    },
+    "ErrorRef": {
+      "type": "object",
+      "required": ["id", "source"],
+      "properties": {
+        "id": { "type": "string" },
+        "source": { "type": "string" },
+        "url": { "type": ["string", "null"] },
+        "title": { "type": ["string", "null"] }
+      }
+    },
+    "DeploymentRef": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "environment": { "type": ["string", "null"] },
+        "url": { "type": ["string", "null"] },
+        "status": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
