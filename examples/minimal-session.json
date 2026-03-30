@@ -1,0 +1,147 @@
+{
+  "specVersion": "0.1.0",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "startTime": "2026-03-30T10:00:00Z",
+  "endTime": "2026-03-30T10:45:00Z",
+  "status": "completed",
+  "agent": {
+    "name": "Claude Code",
+    "version": "1.0.32",
+    "model": "claude-sonnet-4-6",
+    "provider": "anthropic",
+    "properties": {}
+  },
+  "project": {
+    "name": "ora-ai",
+    "repository": "ga1ien/ora",
+    "workingDirectory": "/Users/dev/projects/ora-ai",
+    "branch": "main",
+    "commitSha": "abc1234",
+    "properties": {}
+  },
+  "developer": {
+    "id": "galen",
+    "name": "Galen Oakes",
+    "properties": {}
+  },
+  "events": [
+    {
+      "type": "message",
+      "id": "evt-0",
+      "timestamp": "2026-03-30T10:00:00Z",
+      "parentId": null,
+      "durationMs": null,
+      "role": "user",
+      "content": "Fix the auth middleware to handle expired tokens",
+      "tokenUsage": null,
+      "properties": {}
+    },
+    {
+      "type": "search",
+      "id": "evt-1",
+      "timestamp": "2026-03-30T10:00:05Z",
+      "parentId": null,
+      "durationMs": 120,
+      "tool": "Grep",
+      "query": "token.*expired",
+      "resultCount": 3,
+      "topResults": ["src/middleware.ts:42", "src/auth/validate.ts:18"],
+      "properties": {}
+    },
+    {
+      "type": "fileOperation",
+      "id": "evt-2",
+      "timestamp": "2026-03-30T10:00:10Z",
+      "parentId": null,
+      "durationMs": null,
+      "operation": "read",
+      "path": "src/middleware.ts",
+      "diff": null,
+      "beforeHash": null,
+      "afterHash": null,
+      "linesAdded": null,
+      "linesRemoved": null,
+      "properties": {}
+    },
+    {
+      "type": "message",
+      "id": "evt-3",
+      "timestamp": "2026-03-30T10:00:15Z",
+      "parentId": null,
+      "durationMs": null,
+      "role": "assistant",
+      "content": "I see the issue. The middleware doesn't check token expiry before validating. Let me fix this.",
+      "tokenUsage": {
+        "inputTokens": 1200,
+        "outputTokens": 350,
+        "cacheReadTokens": 800,
+        "cacheWriteTokens": null
+      },
+      "properties": {
+        "model": "claude-sonnet-4-6"
+      }
+    },
+    {
+      "type": "fileOperation",
+      "id": "evt-4",
+      "timestamp": "2026-03-30T10:00:20Z",
+      "parentId": "evt-3",
+      "durationMs": null,
+      "operation": "edit",
+      "path": "src/middleware.ts",
+      "diff": "--- old\n+++ new\n@@ -42,3 +42,8 @@\n-const user = validateToken(token);\n+const decoded = decodeToken(token);\n+if (decoded.exp < Date.now() / 1000) {\n+  return c.json({ error: 'Token expired' }, 401);\n+}\n+const user = validateToken(token);",
+      "beforeHash": "a1b2c3",
+      "afterHash": "d4e5f6",
+      "linesAdded": 4,
+      "linesRemoved": 1,
+      "properties": {}
+    },
+    {
+      "type": "terminalCommand",
+      "id": "evt-5",
+      "timestamp": "2026-03-30T10:01:00Z",
+      "parentId": "evt-3",
+      "durationMs": 3200,
+      "command": "npm run typecheck",
+      "cwd": "/Users/dev/projects/ora-ai",
+      "stdout": "No errors found.",
+      "stderr": null,
+      "exitCode": 0,
+      "properties": {}
+    }
+  ],
+  "metrics": {
+    "messageCount": 2,
+    "toolCallCount": 4,
+    "filesTouchedCount": 1,
+    "durationMinutes": 45,
+    "tokenUsage": {
+      "inputTokens": 1200,
+      "outputTokens": 350,
+      "cacheReadTokens": 800,
+      "cacheWriteTokens": null
+    },
+    "estimatedCostUsd": 0.012,
+    "filesTouched": ["src/middleware.ts"],
+    "toolsUsed": ["Grep", "Read", "Edit", "Bash"],
+    "properties": {}
+  },
+  "relationships": {
+    "commits": [
+      {
+        "sha": "d4e5f6a",
+        "message": "fix: handle expired tokens in auth middleware",
+        "repository": "ga1ien/ora",
+        "timestamp": "2026-03-30T10:02:00Z"
+      }
+    ],
+    "pullRequests": [],
+    "issues": [],
+    "errors": [],
+    "deployments": [],
+    "parentSession": null,
+    "childSessions": [],
+    "properties": {}
+  },
+  "properties": {}
+}
