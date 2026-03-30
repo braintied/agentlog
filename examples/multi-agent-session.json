@@ -1,0 +1,145 @@
+{
+  "specVersion": "0.1.0",
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "startTime": "2026-03-30T14:00:00Z",
+  "endTime": "2026-03-30T14:30:00Z",
+  "status": "completed",
+  "agent": {
+    "name": "Claude Code",
+    "version": null,
+    "model": "claude-opus-4-6",
+    "provider": "anthropic",
+    "properties": {
+      "claude-code:permissionMode": "ultrawork"
+    }
+  },
+  "project": {
+    "name": "platform",
+    "repository": "acme/platform",
+    "workingDirectory": "/home/dev/platform",
+    "branch": "feature/session-intelligence",
+    "commitSha": "abc1234",
+    "properties": {}
+  },
+  "developer": {
+    "id": "dev-1",
+    "name": "Jane Developer",
+    "properties": {}
+  },
+  "events": [
+    {
+      "type": "message",
+      "id": "evt-0",
+      "timestamp": "2026-03-30T14:00:00Z",
+      "parentId": null,
+      "durationMs": null,
+      "role": "user",
+      "content": "Build session intelligence for watchtower with /ultrawork",
+      "tokenUsage": null,
+      "properties": {}
+    },
+    {
+      "type": "message",
+      "id": "evt-1",
+      "timestamp": "2026-03-30T14:00:10Z",
+      "parentId": null,
+      "durationMs": null,
+      "role": "assistant",
+      "content": "I'll parallelize this across 3 sub-agents: one for the database migration, one for the Inngest functions, and one for the MCP tools.",
+      "tokenUsage": {
+        "inputTokens": 5000,
+        "outputTokens": 200,
+        "cacheReadTokens": 3500,
+        "cacheWriteTokens": null
+      },
+      "properties": {}
+    },
+    {
+      "type": "toolCall",
+      "id": "evt-2",
+      "timestamp": "2026-03-30T14:00:15Z",
+      "parentId": "evt-1",
+      "durationMs": 120000,
+      "name": "Agent",
+      "input": {
+        "description": "Build database migration",
+        "subagent_type": "sisyphus-junior",
+        "prompt": "Create migration for coding_sessions and session_chunks tables..."
+      },
+      "output": "Migration applied successfully. 2 tables, 8 indexes, 4 RPCs created.",
+      "status": "success",
+      "summary": "Sub-agent created database schema with tables, indexes, and search RPCs",
+      "properties": {}
+    },
+    {
+      "type": "toolCall",
+      "id": "evt-3",
+      "timestamp": "2026-03-30T14:00:15Z",
+      "parentId": "evt-1",
+      "durationMs": 180000,
+      "name": "Agent",
+      "input": {
+        "description": "Build Inngest functions",
+        "subagent_type": "sisyphus-junior-high",
+        "prompt": "Create session-scanner.ts and session-analyzer.ts..."
+      },
+      "output": "Created 2 Inngest functions: session-scanner (cron) and session-analyzer (event-driven).",
+      "status": "success",
+      "summary": "Sub-agent built session scanner and AI analyzer functions",
+      "properties": {}
+    },
+    {
+      "type": "toolCall",
+      "id": "evt-4",
+      "timestamp": "2026-03-30T14:00:15Z",
+      "parentId": "evt-1",
+      "durationMs": 150000,
+      "name": "Agent",
+      "input": {
+        "description": "Add MCP tools and digest integration",
+        "subagent_type": "sisyphus-junior-high",
+        "prompt": "Add 3 new MCP tools to watchtower-tools.ts and integrate session data into digests..."
+      },
+      "output": "Added 3 MCP tools and session summary to daily/weekly digests.",
+      "status": "success",
+      "summary": "Sub-agent added search, activity, and decisions MCP tools plus digest integration",
+      "properties": {}
+    }
+  ],
+  "metrics": {
+    "messageCount": 2,
+    "toolCallCount": 3,
+    "filesTouchedCount": 12,
+    "durationMinutes": 30,
+    "tokenUsage": {
+      "inputTokens": 85000,
+      "outputTokens": 12000,
+      "cacheReadTokens": 60000,
+      "cacheWriteTokens": null
+    },
+    "estimatedCostUsd": 1.85,
+    "filesTouched": [
+      "migrations/cortex/129_coding_session_intelligence.sql",
+      "apps/watchtower/src/inngest/functions/session-scanner.ts",
+      "apps/watchtower/src/inngest/functions/session-analyzer.ts",
+      "apps/watchtower/src/webhook/session.ts",
+      "apps/mcp-gateway/src/ora-gateway/products/cortex/watchtower-tools.ts"
+    ],
+    "toolsUsed": ["Agent", "Edit", "Write", "Bash", "Read", "Grep"],
+    "properties": {}
+  },
+  "relationships": {
+    "commits": [],
+    "pullRequests": [],
+    "issues": [],
+    "errors": [],
+    "deployments": [],
+    "parentSession": null,
+    "childSessions": ["sub-session-migration", "sub-session-inngest", "sub-session-mcp"],
+    "properties": {}
+  },
+  "properties": {
+    "orchestrationMode": "ultrawork",
+    "parallelAgents": 3
+  }
+}
