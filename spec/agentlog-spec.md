@@ -3,6 +3,7 @@
 **Version**: 0.2.0
 **Status**: Draft
 **Date**: 2026-03-30
+**Updated**: 2026-08-17 (implementations: package 0.3.0; schema unchanged)
 **License**: Apache-2.0
 
 ## 1. Introduction

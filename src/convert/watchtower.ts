@@ -47,6 +47,14 @@ export interface WatchtowerSessionRow {
   analyzed_at: string | null;
 }
 
+/** watchtower.session_messages as of Watchtower 5.x */
+export interface WatchtowerMessageRow {
+  role: string;
+  content: string;
+  created_at?: string;
+  timestamp?: string;
+}
+
 export interface WatchtowerCommitRow {
   sha: string;
   message: string | null;
@@ -69,6 +77,12 @@ export interface ExportOptions {
 
   /** Developer display name. */
   developerName?: string;
+
+  /**
+   * Live session_messages rows. When present these win over
+   * metadata.raw_content (the March 2026 reconstruction).
+   */
+  messages?: WatchtowerMessageRow[];
 }
 
 // =============================================================================
@@ -85,9 +99,20 @@ export function exportWatchtowerSession(
   const events: SessionEvent[] = [];
   let eventIndex = 0;
 
+  const liveMessages = options?.messages;
+  if (liveMessages !== undefined && liveMessages.length > 0) {
+    for (const message of liveMessages) {
+      const ts = message.timestamp !== undefined
+        ? message.timestamp
+        : (message.created_at !== undefined ? message.created_at : row.session_started_at);
+      const role = message.role === 'assistant' || message.role === 'system' ? message.role : 'user';
+      events.push(buildMessageEvent(role, message.content, ts !== undefined ? ts : null, eventIndex++));
+    }
+  }
+
   // Reconstruct events from raw_content in metadata
   const metadata = row.metadata;
-  if (metadata !== null && metadata !== undefined) {
+  if (events.length === 0 && metadata !== null && metadata !== undefined) {
     const rawContent = typeof metadata.raw_content === 'string' ? metadata.raw_content : null;
 
     if (rawContent !== null) {
@@ -209,7 +234,8 @@ export function exportWatchtowerSession(
       watchtowerSummary: row.ai_summary,
       watchtowerDecisions: row.decisions,
       converter: 'watchtower',
-      converterVersion: SPEC_VERSION,
+      converterVersion: '0.3.0',
+      source: row.source,
     },
   };
 
@@ -221,7 +247,7 @@ export function exportWatchtowerSession(
 // =============================================================================
 
 function buildMessageEvent(
-  role: 'user' | 'assistant',
+  role: 'user' | 'assistant' | 'system',
   content: string,
   sessionStartTime: string | null,
   index: number,
@@ -244,7 +270,10 @@ function mapSourceToAgentName(source: string): string {
     case 'claude_code': return 'Claude Code';
     case 'cursor': return 'Cursor';
     case 'codex': return 'OpenAI Codex';
-    case 'gemini': return 'Gemini';
+    case 'gemini': return 'Gemini CLI';
+    case 'grok': return 'Grok';
+    case 'opencode': return 'OpenCode';
+    case 'kulti_meet': return 'Kulti Meet';
     default: return source;
   }
 }
@@ -255,6 +284,9 @@ function mapSourceToProvider(source: string): string {
     case 'cursor': return 'cursor';
     case 'codex': return 'openai';
     case 'gemini': return 'google';
+    case 'grok': return 'xai';
+    case 'opencode': return 'opencode';
+    case 'kulti_meet': return 'braintied';
     default: return 'unknown';
   }
 }

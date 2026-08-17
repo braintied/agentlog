@@ -32,7 +32,7 @@ AgentLog defines a portable JSON format for recording what happens during AI age
 
 ## The Problem
 
-Every AI coding tool (Claude Code, Cursor, Codex, Aider) produces session logs in its own proprietary format. There's no way to:
+Every AI coding tool (Claude Code, Grok, Codex, Cursor, OpenCode, Kulti) produces session logs in its own proprietary format. There's no way to:
 
 - **Search** across sessions from different tools
 - **Measure** AI coding impact across your engineering org
@@ -79,12 +79,37 @@ const session = await convertClaudeCodeSession('~/.claude/projects/myproject/ses
 console.log(session.events.length, 'events captured');
 ```
 
-### Export from Watchtower
+### Export from Watchtower 5.x
+
+Watchtower is the capture product. AgentLog is the interchange format.
+Hooks and disk adapters already emit a `SessionPayload`. Convert that:
+
+```typescript
+import { exportFromPayload } from '@braintied/agentlog/convert/payload';
+
+const agentLog = exportFromPayload(webhookBody);
+```
+
+Or a `coding_sessions` row, with live `session_messages` when you have them
+(they win over the old `metadata.raw_content` reconstruction):
 
 ```typescript
 import { exportWatchtowerSession } from '@braintied/agentlog/convert/watchtower';
 
-const agentLog = exportWatchtowerSession(dbRow, { projectName: 'my-app' });
+const agentLog = exportWatchtowerSession(dbRow, {
+  projectName: 'my-app',
+  messages: sessionMessages,
+});
+```
+
+### Convert a Grok history file
+
+```typescript
+import { convertGrokHistory } from '@braintied/agentlog/convert/grok';
+
+const session = await convertGrokHistory(
+  '~/.grok/sessions/.../chat_history.jsonl',
+);
 ```
 
 ## Schema
@@ -108,7 +133,8 @@ The required context: who, when, where, what tool.
 
 ### Layer 2 — Event Timeline
 
-Seven event types capture everything that happened:
+Twelve event types (spec 0.2.0). Capture produces `message` and
+`toolCall` first; the rest are for producers that have them.
 
 | Type | What it captures | Key fields |
 |------|-----------------|------------|
@@ -119,6 +145,11 @@ Seven event types capture everything that happened:
 | **`search`** | Code/web search | `tool`, `query`, `resultCount` |
 | **`reasoning`** | AI decision-making | `intent`, `alternatives`, `rationale` |
 | **`error`** | Errors + recovery | `message`, `code`, `recovery`, `resolved` |
+| **`handoff`** | Agent-to-agent | `fromAgent`, `toAgent`, `reason` |
+| **`approval`** | Human gates | `action`, `approver`, `decision` |
+| **`plan`** | Planned steps | `title`, `steps` |
+| **`checkpoint`** | Save points | `checkpointType`, `label` |
+| **`contextLoad`** | Injected context | `source`, `query` |
 
 All events share: `id`, `timestamp`, `parentId` (for nesting), `durationMs`, `properties` (extensibility).
 
@@ -160,11 +191,16 @@ Every object has a `properties` bag for vendor-specific data ([SARIF pattern](ht
 
 | Converter | Status |
 |-----------|--------|
+| Watchtower `SessionPayload` (5.x wire) | Available (`convert/payload`) |
+| Watchtower `coding_sessions` + `session_messages` | Available (`convert/watchtower`) |
 | Claude Code JSONL | Available |
-| Watchtower DB | Available |
-| Aider | Planned |
-| OpenAI Codex | Planned |
-| Cursor | Planned |
+| Grok `chat_history.jsonl` | Available (`convert/grok`) |
+| Codex / Cursor / OpenCode disk | Capture is Watchtower's job. Feed the payload. |
+| Aider | Not started |
+
+Sources named in `AGENT_SOURCES`: `claude_code`, `grok`, `codex`,
+`cursor`, `opencode`, `gemini`, `kulti_meet`. A missing source is not
+silently remapped.
 
 ## Examples
 

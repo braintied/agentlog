@@ -1,7 +1,7 @@
 {
   "name": "@braintied/agentlog",
-  "version": "0.2.1",
-  "description": "AgentLog — Open standard for AI agent session interchange. Schema, types, validation, and converters.",
+  "version": "0.3.0",
+  "description": "Portable JSON for AI agent sessions. Spec 0.2.0. Converts Claude Code, Grok, Codex, Cursor, OpenCode, and Watchtower 5.x.",
   "homepage": "https://github.com/braintied/agentlog",
   "repository": {
     "type": "git",
@@ -22,6 +22,14 @@
       "types": "./dist/convert/watchtower.d.ts",
       "import": "./dist/convert/watchtower.js"
     },
+    "./convert/payload": {
+      "types": "./dist/convert/payload.d.ts",
+      "import": "./dist/convert/payload.js"
+    },
+    "./convert/grok": {
+      "types": "./dist/convert/grok.d.ts",
+      "import": "./dist/convert/grok.js"
+    },
     "./schemas/agentlog.schema.json": "./schemas/agentlog.schema.json"
   },
   "files": [
@@ -32,7 +40,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test test/*.test.mjs"
   },
   "dependencies": {
     "zod": "^4.3.6"
