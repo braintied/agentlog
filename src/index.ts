@@ -58,6 +58,13 @@ export type {
 
 // Constants
 export { SPEC_VERSION } from './schema.js';
+export {
+  AGENT_SOURCES,
+  describeSource,
+  isAgentSource,
+  sourceFromSessionKey,
+} from './sources.js';
+export type { AgentSource, AgentSourceInfo } from './sources.js';
 
 // Validation — individual schemas exported for Zod v4 compatibility
 export {
